@@ -1,6 +1,5 @@
 var mysql = require("mysql");
 var inquirer = require("inquirer");
-var fs = require("fs");
 
 var cart = [];
 
@@ -109,7 +108,55 @@ function amount() {
     })
         .then(function (answer) {
             console.log("Checking for product availability. Please wait.");
+            for (var i = 0; i < cart.length; i++) {
+                var query = "SELECT * FROM products WHERE ?";
+                connection.query(query, { product_name: cart[i] }, function (err, res) {
+                    if (err) throw err;
+                    console.log(res);
+
+                    var price = (res[0].price * answer.amount);
+                    var buyAmount = JSON.parse(answer.amount);
+                    var quantity = JSON.parse(res[0].stock_quantity);
+
+                    if (res[0].stock_quantity >= answer.amount) {
+                        console.log(cart[i - 1] + " is available. Please review and confirm order.");
+                        console.log("Total cost of purcahse : $ " + price);
+                        inquirer.prompt({
+                            name: "confirm",
+                            type: "confirm",
+                            message: "Please review total cost and confirm order."
+                        }).then (function(answer) {
+                            if (answer.confirm) {
+                                console.log("Thank you! Here is your receipt.")
+                                console.log("------------------------------------------------------")
+                                console.log("Product purchased: " + cart + "\nTotal cost: $" + price) 
+                                console.log("------------------------------------------------------")
+                                connection.query("UPDATE products SET ? WHERE ?",
+                                [
+                                    {
+                                        stock_quantity: quantity -= buyAmount
+                                    },
+                                    {
+                                        product_name: cart[i - 1]
+                                    }
+                                ]);
+                                console.log(cart[i - 1] + " Remaining: " + quantity)
+                                connection.end();
+                            }
+                            else {
+                                console.log("Order canceled.")
+                                amount();
+                            }
+                    
+                        });
+                    }
+                    else {
+                        console.log("Quantity: " + quantity);
+                        console.log("Insufficient quantity!");
+                        amount();
+                    };
+                });
+            };
 
         });
 };
-
