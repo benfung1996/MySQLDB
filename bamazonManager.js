@@ -64,8 +64,8 @@ function viewSale() {
 function viewLow() {
     connection.query("SELECT * FROM products WHERE stock_quantity < 5", function (err, res) {
         if (err) throw err;
-        if (res = []) {
-            console.log("We are well stocked!")
+        if (res[0] === undefined) {
+            console.log("Our inventory is looking good!")
         }
         else {
             console.log(res)
