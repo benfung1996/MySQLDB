@@ -26,6 +26,7 @@ function start() {
 };
 
 function purchase() {
+    cart = [];
     inquirer.prompt({
         name: "buy",
         type: "list",
